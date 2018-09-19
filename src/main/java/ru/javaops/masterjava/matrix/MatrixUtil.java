@@ -15,6 +15,7 @@ public class MatrixUtil {
         final int matrixSize = matrixA.length;
         final int[][] matrixC = new int[matrixSize][matrixSize];
         //Comment
+        //Comment 2
 
         return matrixC;
     }
