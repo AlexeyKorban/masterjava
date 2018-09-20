@@ -3,16 +3,38 @@ package ru.javaops.masterjava.matrix;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.stream.IntStream;
 
 /**
  * gkislin
  * 03.07.2016
  */
 public class MatrixUtil {
+
+    public static int[][] concurrentMultiplyStreams(int[][] matrixA, int[][] matrixB, int threadNumber) throws ExecutionException, InterruptedException {
+        final int matrixSize = matrixA.length;
+        final int[][] matrixC = new int[matrixSize][matrixSize];
+
+        new ForkJoinPool(threadNumber).submit(
+                () -> IntStream.range(0, matrixSize)
+                    .parallel()
+                    .forEach(row -> {
+                        final int[] rowA = matrixA[row];
+                        final int[] rowC = matrixC[row];
+
+                        for (int idx = 0; idx < matrixSize; idx++) {
+                            final int elA = rowA[idx];
+                            final int[] rowB = matrixB[idx];
+                            for (int col = 0; col < matrixSize; col++) {
+                                rowC[col] += elA * rowB[col];
+                            }
+                        }
+                    })
+        ).get();
+
+        return matrixC;
+    }
 
     public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
         final int matrixSize = matrixA.length;
@@ -108,8 +130,7 @@ public class MatrixUtil {
 
         int thatColumn[] = new int[matrixSize];
 
-        try {
-            for (int j = 0; ; j++) {
+            for (int j = 0; j < matrixSize; j++) {
                 for (int k = 0; k < matrixSize; k++) {
                     thatColumn[k] = matrixB[k][j];
                 }
@@ -123,8 +144,6 @@ public class MatrixUtil {
                     matrixC[i][j] = sum;
                 }
             }
-        } catch (IndexOutOfBoundsException ignored) {
-        }
 
         return matrixC;
     }
